@@ -10,6 +10,7 @@ tests: clean
 	cmake --build build --target check
 
 install: clean
+	git submodule update --init
 	mkdir -p build
 	cmake -S ./ -B build
 	cmake --build build
