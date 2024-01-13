@@ -130,7 +130,7 @@ else() ### если нет, то собираем проект
         target_link_libraries(lib_view PRIVATE QtGifImage::QtGifImage)
 
         #Говорим, что для таргета билда обязательна либа вью, и что снаружи ее методы недоступны
-        #target_link_libraries(CPP_3DViewer PRIVATE lib_view)
+        target_link_libraries(CPP_3DViewer PRIVATE lib_view)
 
         target_link_libraries(CPP_3DViewer PRIVATE QtGifImage::QtGifImage)
 

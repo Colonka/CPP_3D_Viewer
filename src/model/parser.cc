@@ -26,7 +26,7 @@ Parser::~Parser() {
   if (matrix_of_vertexes_) delete matrix_of_vertexes_;
 }
 
-void Parser::OpenFile(std::string filename) {
+void Parser::OpenFile(const std::string& filename) {
   Clean();
   file_.open(filename);
   if (file_.is_open()) {

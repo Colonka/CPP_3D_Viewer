@@ -17,7 +17,7 @@ class Parser {
   Parser();
   ~Parser();
 
-  void OpenFile(std::string filename);  // Подумать как искл организовать
+  void OpenFile(const std::string& filename);  // Подумать как искл организовать
   void ReadFile();  //  подумай отправить в приват
 
   int GetVertexes() { return vertexes_; }
