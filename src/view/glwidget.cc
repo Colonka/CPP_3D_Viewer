@@ -2,7 +2,9 @@
 
 #include "../controller/controller_object.h"
 
-GLWidget::GLWidget(QWidget* parent) : QOpenGLWidget(parent) {}
+GLWidget::GLWidget(QWidget* parent, s21::Controller* controller,
+                   MainwindowSettings* settings)
+    : QOpenGLWidget(parent), {}
 
 /*
 void GLWidget::send_obj_slot(obj_info_struct *obj_ptr_from_main) {

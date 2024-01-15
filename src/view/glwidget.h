@@ -1,40 +1,52 @@
 #ifndef SRC_GLWIDGET_H
 #define SRC_GLWIDGET_H
 
-#include <QOpenGLFunctions>
+#include <QKeyEvent>
+#include <QObject>
 #include <QOpenGLWidget>
-#include <QWidget>
+#include <QVector3D>
+#include <QWheelEvent>
+#include <memory>
+
+#include "../controller/controller.h"
+#include "ui/camera.h"
+#include "ui/view_settings.h"
 
 class GLWidget : public QOpenGLWidget, public QOpenGLFunctions {
   Q_OBJECT
 
  public:
-  GLWidget(QWidget* parent = nullptr);
+  GLWidget(QWidget *parent = nullptr, s21::Controller *controller,
+           MainwindowSettings *settings);
   ~GLWidget();
 
-  // public slots:
-  //  void send_obj_slot(obj_info_struct* obj_ptr_from_main);
-  //  void send_settings_slot(settings_struct* settings_ptr_from_main);
+  s21::Model &getModel();
+  void loadModel(QString filename);
+  void resetModel();
+  QImage getImage();
+  const Camera &getCamera();
+  bool saveImageToFile(QString filename);
+
+ protected:
+  void initializeGL() override;
+  void paintGL() override;
+  void wheelEvent(QWheelEvent *e) override;
+  void mousePressEvent(QMouseEvent *e) override;
+  void mouseReleaseEvent(QMouseEvent *e) override;
+  void mouseMoveEvent(QMouseEvent *e) override;
+  void updateObserver(const Subject &s) override;
 
  private:
-  // obj_info_struct* obj_ptr = NULL;
-  // settings_struct* settings_ptr = NULL;
-  void initializeGL() override;
-  void resizeGL(int width, int height) override;
-  void paintGL() override;
+  void applyProjectionType();
+  void applyBackgroundColor();
+  void drawEdges();
+  void drawVertex(float x, float y, float z);
+  void drawVertices();
+  void drawAxes();
 
-  /*
-    float vertex_arr[24] = {
-        0.5, 0.5, -0.5,
-        0.5, -0.5, -0.5,
-        1.000000, 1.000000, 1.000000,
-        1.000000, -1.000000, 1.000000,
-        -1.000000, 1.000000, -1.000000,
-        -1.000000, -1.000000, -1.000000,
-        -1.000000, 1.000000, 1.000000,
-        -1.000000, -1.000000, 1.000000
-    };
-    */
+ private:
+  s21::Controller *controller_;
+  MainwindowSettings *settings_;
 };
 
 #endif  // SRC_GLWIDGET_H
