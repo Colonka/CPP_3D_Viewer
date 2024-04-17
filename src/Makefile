@@ -1,59 +1,71 @@
-CFLAGS = -Wall -Werror -Wextra -std=c17
-CC = g++
+VERSION = `date +"%Y.%m.%d"`
+ARCHIVE = 3DViewer-$(VERSION)
 
-ARCHIVE = CPP_3DViewer
-all: install
+all: build
 
-tests: clean
-	mkdir build
-	cmake -S ./ -B build -DCALC_TESTING=ON
-	cmake --build build --target check
-
-install: clean
+build: 
 	git submodule update --init
 	mkdir -p build
 	cmake -S ./ -B build
 	cmake --build build
 
+install:
+	git submodule update --init
+	mkdir -p 3DViewer_2
+	cmake -S ./ -B 3DViewer_2
+	cmake --build 3DViewer_2
+
+uninstall:
+	rm -rf 3DViewer_2
+	rm -f 3d_viewer_settings.ini
+
 run:
-	open -Fn build/s21_calc.app
+	open -Fn build/CPP_3DViewer.app
 
-uninstall: 
-	rm -rf build
-	rm -rf test_build
-	rm -rf docs
+test: clean
+	mkdir tests/build_test
+	cmake -S ./ -B tests/build_test -DTESTING=ON
+	cmake --build tests/build_test --target check
 
-dvi: clean
-	mkdir -p docs
+gcov_report: clean
+	mkdir tests/build_test
+	mkdir report
+	cmake -S ./ -B tests/build_test -DTESTING=ON -DCOVERAGE=ON
+	cmake --build tests/build_test --target coverage
+	open report/report.html
+
+dist:
+	tar -cf $(ARCHIVE).tar controller model view libs tests CMakeLists.txt Makefile Doxyfile dvi.html main.cc
+
+dvi:
+	mkdir docs
 	doxygen Doxyfile
 	mv html latex docs
 	open docs/html/index.html
 
 dvi_open:
-	open docs/html/index.html
+	open dvi.html
 
-dist: clean install
-	tar -cf $(ARCHIVE).tar build/*
+valgrind:
+	cd tests/build_test/tests/ && valgrind --leak-czheck=yes --track-origins=yes ./3DViewer_test
 
-gcov_report: clean
-	mkdir build
-	mkdir report
-	cmake -S ./ -B build -DCALC_TESTING=ON -DCALC_COVERAGE=ON
-	cmake --build build --target coverage
-	open report/report.html
-	
-git: clean
+style:
+	cp ../materials/linters/.clang-format .clang-format
+	clang-format -style=google -i ./model/*.cc ./model/*.h ./controller/*.cc ./controller/*.h ./view/*.cc ./view/*.h ./tests/*.cc ./tests/*.h
+	clang-format -style=google -n ./model/*.cc ./model/*.h ./controller/*.cc ./controller/*.h ./view/*.cc ./view/*.h ./tests/*.cc ./tests/*.h
+	rm .clang-format
+
+cpp_check:
+	cppcheck --suppress=missingIncludeSystem --language=c++ ./model/*.cc ./model/*.h ./controller/*.cc ./controller/*.h ./view/*.cc ./view/*.h ./tests/*.cc ./tests/*.h
+
+clean: 
+	rm -rf report/ docs/ tests/build_test/
+
+realclean: clean
+	rm -rf build *.tar
+
+git: realclean clean uninstall
 	git add -A
 	git commit -m "$m"
 	git push origin "$b"
 
-test_no_run: clean
-	mkdir build
-	cmake -S ./ -B build -DCALC_TESTING=ON
-	cmake --build build
-
-check: clean test_no_run
-	cd build/test && leaks --atExit -- ./s21_calc_test
-
-clean:
-	rm -rf build test_build CMakeLists.txt.user report docs .clang-format

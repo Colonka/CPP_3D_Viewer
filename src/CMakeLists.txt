@@ -8,31 +8,36 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #Задаем флаги компиляции
 if((CMAKE_CXX_COMPILER_ID MATCHES "GNU") OR (CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
 add_compile_options(
-    #-Werror
-    #-Wall
-    #-Wextra
+    -Wall
+    -Wextra
     -Wno-deprecated #флаг игнорирующий ошибку устаревших функций
-    #-Wpedantic
-    #-std=c++17
+    -Wpedantic
 )
 endif()
 
+set(QT_OPENGL_WIDGETS_MODULE "OpenGLWidgets")
+
+if(QT_MAJOR_VERSION EQUAL 5)
+    find_package(Qt5OpenGLWidgets QUIET)
+    if(NOT Qt5OpenGLWidgets_FOUND)
+        set(QT_OPENGL_WIDGETS_MODULE "OpenGL")
+    endif()
+endif()
+
 #Задааем переменную для тестирования и выключаем тестирование по дефолту
-option(CALC_TESTING "Включить модульное тестирование" OFF)
+option(TESTING "Модульное тестирование" OFF)
 
 #Задааем переменную для покрытия тестами и выключаем тестирование по дефолту
-option(CALC_COVERAGE "Включить покрытие тестами" OFF)
+option(COVERAGE "Покрытие тестами" OFF)
 
 #Задаем исходники модели
 set(MODEL_SRC
     model/affine.cc
     model/affine.h
-    # model/model.cc
-    # model/model.h
+    model/model.cc
+    model/model.h
     model/parser.cc
     model/parser.h
-    model/object.cc
-    model/object.h
 )
 
 #Создаем либу модели
@@ -42,10 +47,10 @@ add_library(
     ${MODEL_SRC}
 )
 
-if(CALC_TESTING) ### проверяем включено ли модульное тестирование
-    add_subdirectory(test) ### если да, то собираем тесты и покрытие при необходимости
+if(TESTING) ### проверяем включено ли модульное тестирование
+    add_subdirectory(tests) ### если да, то собираем тесты и покрытие при необходимости
 else() ### если нет, то собираем проект
-    message(STATUS "Тестирование проекта s21_calc выключено")
+    message(STATUS "Тестирование проекта CPP_3DViewer выключено")
     set(CMAKE_AUTOUIC ON)
     set(CMAKE_AUTOMOC ON)
     set(CMAKE_AUTORCC ON)
@@ -54,15 +59,15 @@ else() ### если нет, то собираем проект
     set(CMAKE_PREFIX_PATH "/Users/Anonymous/Qt/6.5.0/macos/lib/cmake")
 
     #Находим и подключаем необходимые пакеты для OpenGL
-    find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets OpenGLWidgets)
-    find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets OpenGLWidgets)
+    find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets ${QT_OPENGL_WIDGETS_MODULE})
+    find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets ${QT_OPENGL_WIDGETS_MODULE})
 
     #Находим и подключаем необходимые кьютишные пакеты
     find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
     find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
     find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS PrintSupport)
 
-    add_subdirectory(third_party/QtGifImage)
+    add_subdirectory(libs/QtGifImage)
 
     #Задаем исходники контроллера
         set(CONTR_SRC
@@ -72,11 +77,15 @@ else() ### если нет, то собираем проект
 
         #Задаем исходники интерфейса
         set(VIEW_SRC
-            view/mainwindow.cpp
+            view/mainwindow.cc
             view/mainwindow.h
             view/mainwindow.ui
             view/glwidget.cc
             view/glwidget.h
+            view/recorder.cc
+            view/recorder.h
+            view/settings.cc
+            view/settings.h
         )
 
         #Создаем либу контроллера
@@ -97,7 +106,7 @@ else() ### если нет, то собираем проект
         if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
             qt_add_executable(CPP_3DViewer
                 MANUAL_FINALIZATION
-                main.cpp
+                main.cc
             )
 
         #Настройки под сборку на андройде
@@ -126,16 +135,16 @@ else() ### если нет, то собираем проект
         #Говорим, что для либы вью нужны обязательна либы кьюта, и что снаружи вью они недоступны
         target_link_libraries(lib_view PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
         target_link_libraries(lib_view PRIVATE Qt${QT_VERSION_MAJOR}::PrintSupport)
-	    target_link_libraries(lib_view PRIVATE Qt${QT_VERSION_MAJOR}::OpenGLWidgets)
+	    target_link_libraries(lib_view PRIVATE Qt${QT_VERSION_MAJOR}::${QT_OPENGL_WIDGETS_MODULE})
         target_link_libraries(lib_view PRIVATE QtGifImage::QtGifImage)
 
         #Говорим, что для таргета билда обязательна либа вью, и что снаружи ее методы недоступны
         target_link_libraries(CPP_3DViewer PRIVATE lib_view)
-
-        target_link_libraries(CPP_3DViewer PRIVATE QtGifImage::QtGifImage)
-
-        #Говорим, что для таргета билда обязательны Qt::widgets и либа OpenGL 
+        
+        #Говорим, что для таргета билда обязательны Qt::widgets, QtGifImage и либа OpenGL 
         target_link_libraries(CPP_3DViewer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})
+        target_link_libraries(CPP_3DViewer PRIVATE Qt${QT_VERSION_MAJOR}::${QT_OPENGL_WIDGETS_MODULE})
+        target_link_libraries(CPP_3DViewer PRIVATE QtGifImage::QtGifImage)
 
         #Настройки системы
         set_target_properties(CPP_3DViewer PROPERTIES
