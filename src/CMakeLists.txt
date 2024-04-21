@@ -55,9 +55,6 @@ else() ### если нет, то собираем проект
     set(CMAKE_AUTOMOC ON)
     set(CMAKE_AUTORCC ON)
 
-    #Устанавливаем путь до компонентов Qt
-    set(CMAKE_PREFIX_PATH "/Users/Anonymous/Qt/6.5.0/macos/lib/cmake")
-
     #Находим и подключаем необходимые пакеты для OpenGL
     find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets ${QT_OPENGL_WIDGETS_MODULE})
     find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets ${QT_OPENGL_WIDGETS_MODULE})
